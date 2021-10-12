@@ -1,14 +1,17 @@
 package ru.s1aks.github_application.ui.users_fragment
 
 import com.github.terrakok.cicerone.Router
-import ru.s1aks.github_application.domain.GithubUsersRepo
+import io.reactivex.disposables.CompositeDisposable
+import ru.s1aks.github_application.domain.GithubUsersRepoImpl
 import ru.s1aks.github_application.domain.entities.GithubUser
 import ru.s1aks.github_application.ui.Screens
 
 class UsersPresenter(
-    private val usersRepo: GithubUsersRepo,
+    private val usersRepo: GithubUsersRepoImpl,
     private val router: Router,
 ) : UsersContract.Presenter() {
+
+    private var compositeDisposable: CompositeDisposable = CompositeDisposable()
 
     class UsersListPresenter : UserListPresenter {
         val users = mutableListOf<GithubUser>()
@@ -32,18 +35,36 @@ class UsersPresenter(
         viewState.init()
         loadData()
         usersListPresenter.itemClickListener = { userItemView ->
-            userItemView.position?.let { router.navigateTo(Screens.userDetail(loadUser(it).login)) }
+            userItemView.position?.let { index ->
+                compositeDisposable.add(
+                    usersRepo.users
+                        .map { it[index] }
+                        .subscribe(
+                            { user ->
+                                router.navigateTo(Screens.userDetail(user.login))
+                            },
+                            { thr ->
+                                thr.message?.let { viewState.showError(it) }
+                            }
+                        )
+                )
+            }
         }
     }
 
     override fun loadData() {
-        val users = usersRepo.getUsers()
-        usersListPresenter.users.addAll(users)
-        viewState.updateList()
-    }
-
-    override fun loadUser(position: Int): GithubUser {
-        return usersRepo.getUsers()[position]
+        compositeDisposable.add(
+            usersRepo.users
+                .subscribe(
+                    { userList ->
+                        usersListPresenter.users.addAll(userList)
+                        viewState.updateList()
+                    },
+                    { thr ->
+                        thr.message?.let { viewState.showError(it) }
+                    }
+                )
+        )
     }
 
     override fun backPressed(): Boolean {

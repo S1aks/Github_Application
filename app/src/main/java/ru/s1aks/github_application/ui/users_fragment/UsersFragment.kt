@@ -6,18 +6,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
 import ru.s1aks.github_application.databinding.FragmentUsersBinding
-import ru.s1aks.github_application.domain.GithubUsersRepo
+import ru.s1aks.github_application.domain.GithubUsersRepoImpl
 import ru.s1aks.github_application.impl.util.app
 import ru.s1aks.github_application.ui.BackButtonListener
 
 class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonListener {
 
-    private lateinit var binding: FragmentUsersBinding
+    private var binding: FragmentUsersBinding? = null
     private val presenter: UsersPresenter by moxyPresenter {
-        UsersPresenter(GithubUsersRepo(),
+        UsersPresenter(GithubUsersRepoImpl(),
             requireActivity().app.router)
     }
     private lateinit var adapter: UsersAdapter
@@ -28,19 +29,28 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
         savedInstanceState: Bundle?,
     ): View {
         binding = FragmentUsersBinding.inflate(layoutInflater, container, false)
-        return binding.root
+        return binding!!.root
     }
 
     override fun init() {
-        binding.recyclerView.layoutManager = LinearLayoutManager(context)
+        binding?.recyclerView?.layoutManager = LinearLayoutManager(context)
         adapter = UsersAdapter(presenter.usersListPresenter)
-        binding.recyclerView.adapter = adapter
+        binding?.recyclerView?.adapter = adapter
 
     }
 
     @SuppressLint("NotifyDataSetChanged")
     override fun updateList() {
         adapter.notifyDataSetChanged()
+    }
+
+    override fun showError(message: String) {
+        view?.let { Snackbar.make(it, message, Snackbar.LENGTH_SHORT) }
+    }
+
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
     }
 
     override fun backPressed(): Boolean = presenter.backPressed()
