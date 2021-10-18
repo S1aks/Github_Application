@@ -18,11 +18,10 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
 
     private var binding: FragmentUsersBinding? = null
     private val presenter: UsersPresenter by moxyPresenter {
-        UsersPresenter(GithubUsersRepoImpl(),
+        UsersPresenter(requireContext(), GithubUsersRepoImpl(),
             requireActivity().app.router)
     }
     private lateinit var adapter: UsersAdapter
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
