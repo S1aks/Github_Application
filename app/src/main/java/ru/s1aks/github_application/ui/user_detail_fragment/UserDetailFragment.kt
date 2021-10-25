@@ -10,7 +10,7 @@ import ru.s1aks.github_application.databinding.FragmentUserDetailBinding
 private const val ARG_USER_LOGIN = "user_login"
 
 class UserDetailFragment : Fragment() {
-    private lateinit var binding: FragmentUserDetailBinding
+    private var binding: FragmentUserDetailBinding? = null
 
     private var userLogin: String? = null
 
@@ -26,12 +26,17 @@ class UserDetailFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View {
         binding = FragmentUserDetailBinding.inflate(layoutInflater,container,false)
-        return binding.root
+        return binding!!.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        userLogin?.let { binding.userName.text = it }
+        userLogin?.let { binding?.userName?.text = it }
+    }
+
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
     }
 
     companion object {
