@@ -1,18 +1,17 @@
-package ru.s1aks.github_application.ui.users_fragment
+package ru.s1aks.github_application.ui.user_details_fragment
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
-import ru.s1aks.github_application.databinding.FragmentUsersViewItemBinding
-import ru.s1aks.github_application.domain.entities.GithubUser
+import ru.s1aks.github_application.databinding.FragmentUserDetailsViewItemBinding
+import ru.s1aks.github_application.domain.entities.GithubUserRepo
 
 interface ItemView {
     var position: Int?
 }
 
-interface UserItemView : ItemView {
-    fun setData(user: GithubUser?)
+interface DetailsItemView : ItemView {
+    fun setData(userRepo: GithubUserRepo?)
 }
 
 interface ListPresenter<V : ItemView> {
@@ -21,13 +20,13 @@ interface ListPresenter<V : ItemView> {
     fun getCount(): Int
 }
 
-interface UserListPresenter : ListPresenter<UserItemView>
+interface DetailsListPresenter : ListPresenter<DetailsItemView>
 
-class UsersAdapter(private val presenter: UserListPresenter) :
-    RecyclerView.Adapter<UsersAdapter.ViewHolder>() {
+class UserDetailsAdapter(private val presenter: DetailsListPresenter) :
+    RecyclerView.Adapter<UserDetailsAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-        ViewHolder(FragmentUsersViewItemBinding.inflate(LayoutInflater.from(parent.context),
+        ViewHolder(FragmentUserDetailsViewItemBinding.inflate(LayoutInflater.from(parent.context),
             parent,
             false)).apply {
             itemView.setOnClickListener { presenter.itemClickListener?.invoke(this) }
@@ -39,15 +38,14 @@ class UsersAdapter(private val presenter: UserListPresenter) :
         presenter.bindView(holder.apply { this.position = position })
 
     inner class ViewHolder(
-        private val binding: FragmentUsersViewItemBinding,
+        private val binding: FragmentUserDetailsViewItemBinding,
     ) : RecyclerView.ViewHolder(binding.root),
-        UserItemView {
+        DetailsItemView {
 
         override var position: Int? = -1
 
-        override fun setData(user: GithubUser?) {
-            binding.textViewLogin.text = user?.login
-            binding.imageAvatar.load(user?.avatarUrl)
+        override fun setData(userRepo: GithubUserRepo?) {
+            binding.textViewItem.text = userRepo?.name
         }
     }
 }
