@@ -3,15 +3,15 @@ package ru.s1aks.github_application.ui.user_details_fragment
 import com.github.terrakok.cicerone.Router
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import ru.s1aks.github_application.domain.GithubRepo
+import ru.s1aks.github_application.domain.RoomGithubRepositoriesCache
+import ru.s1aks.github_application.domain.entities.GithubUser
 import ru.s1aks.github_application.domain.entities.GithubUserRepo
 
 class UserDetailsPresenter(
-    private val repo: GithubRepo,
+    private val compositeDisposable: CompositeDisposable?,
+    private val repo: RoomGithubRepositoriesCache,
     private val router: Router,
 ) : UserDetailsContract.Presenter() {
-
-    private var compositeDisposable: CompositeDisposable = CompositeDisposable()
 
     class UserDetailsListPresenter : DetailsListPresenter {
         val userRepos = mutableListOf<GithubUserRepo>()
@@ -28,38 +28,42 @@ class UserDetailsPresenter(
     }
 
     val listPresenter = UserDetailsListPresenter()
-    var userLogin: String? = null
+    var user: GithubUser? = null
     private var listRepos: List<GithubUserRepo>? = null
 
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
         viewState.initView()
-        userLogin?.let { loadData(it) }
+        user?.let { loadData(it) }
         listPresenter.itemClickListener = { itemView ->
             itemView.position?.let { viewState.showToast(listRepos?.get(it)?.forks.toString()) }
         }
     }
 
-    override fun loadData(userLogin: String) {
-        compositeDisposable.add(
-            repo.getUserRepoList(userLogin)
+    override fun loadData(user: GithubUser) {
+        compositeDisposable?.add(
+            repo.userReposCache
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    {
-                        listRepos = it
+                    { list ->
+                        listRepos = list.map {
+                            GithubUserRepo(
+                                it.id,
+                                it.name,
+                                user,
+                                it.forks)
+                        }
                         listPresenter.userRepos.clear()
-                        listPresenter.userRepos.addAll(it)
+                        listPresenter.userRepos.addAll(listRepos!!)
                         viewState.updateList()
                     },
                     { thr ->
                         thr.message?.let { viewState.showError(it) }
                     }
                 )
-        )
-    }
 
-    override fun dispose() {
-        compositeDisposable.dispose()
+        )
+        Thread { repo.getUserRepoList(user) }.start()
     }
 
     override fun backPressed(): Boolean {

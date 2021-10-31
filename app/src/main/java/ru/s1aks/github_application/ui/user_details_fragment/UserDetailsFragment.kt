@@ -8,17 +8,27 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import io.reactivex.disposables.CompositeDisposable
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
 import ru.s1aks.github_application.App
 import ru.s1aks.github_application.databinding.FragmentUserDetailsBinding
+import ru.s1aks.github_application.domain.entities.GithubUser
+import ru.s1aks.github_application.impl.RoomGithubRepositoriesCacheImpl
 import ru.s1aks.github_application.impl.WebGithubRepoImpl
 import ru.s1aks.github_application.ui.BackButtonListener
 
 class UserDetailsFragment : MvpAppCompatFragment(), UserDetailsContract.View, BackButtonListener {
     private var binding: FragmentUserDetailsBinding? = null
+    private var compositeDisposable: CompositeDisposable? = CompositeDisposable()
     private val presenter: UserDetailsPresenter by moxyPresenter {
-        UserDetailsPresenter(WebGithubRepoImpl(), App.instance.router)
+        UserDetailsPresenter(
+            compositeDisposable,
+            RoomGithubRepositoriesCacheImpl(
+                compositeDisposable,
+                WebGithubRepoImpl(),
+                App.instance.db.repositoryDao),
+            App.instance.router)
     }
 
     private lateinit var adapter: UserDetailsAdapter
@@ -44,7 +54,7 @@ class UserDetailsFragment : MvpAppCompatFragment(), UserDetailsContract.View, Ba
         binding?.recyclerView?.layoutManager = LinearLayoutManager(context)
         adapter = UserDetailsAdapter(presenter.listPresenter)
         binding?.recyclerView?.adapter = adapter
-        presenter.userLogin = userLogin
+        presenter.user = userLogin?.let { GithubUser(it, 0, "") }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -62,7 +72,7 @@ class UserDetailsFragment : MvpAppCompatFragment(), UserDetailsContract.View, Ba
     }
 
     override fun onDestroy() {
-        presenter.dispose()
+        compositeDisposable = null
         super.onDestroy()
     }
 
