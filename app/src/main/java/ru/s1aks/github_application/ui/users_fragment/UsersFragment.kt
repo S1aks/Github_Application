@@ -9,17 +9,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
+import ru.s1aks.github_application.App
 import ru.s1aks.github_application.databinding.FragmentUsersBinding
-import ru.s1aks.github_application.impl.GithubUsersRepoImpl
-import ru.s1aks.github_application.impl.util.app
+import ru.s1aks.github_application.impl.WebGithubRepoImpl
 import ru.s1aks.github_application.ui.BackButtonListener
 
 class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonListener {
 
     private var binding: FragmentUsersBinding? = null
     private val presenter: UsersPresenter by moxyPresenter {
-        UsersPresenter(GithubUsersRepoImpl(),
-            requireActivity().app.router)
+        UsersPresenter(WebGithubRepoImpl(), App.instance.router)
     }
     private lateinit var adapter: UsersAdapter
 
@@ -32,9 +31,9 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
         return binding!!.root
     }
 
-    override fun init() {
+    override fun initView() {
         binding?.recyclerView?.layoutManager = LinearLayoutManager(context)
-        adapter = UsersAdapter(presenter.usersListPresenter)
+        adapter = UsersAdapter(presenter.listPresenter)
         binding?.recyclerView?.adapter = adapter
 
     }
@@ -51,6 +50,11 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
     override fun onDestroyView() {
         binding = null
         super.onDestroyView()
+    }
+
+    override fun onDestroy() {
+        presenter.dispose()
+        super.onDestroy()
     }
 
     override fun backPressed(): Boolean = presenter.backPressed()

@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:orientation="horizontal">
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/image_avatar"
+        android:layout_width="@dimen/fragment_users_avatar_size"
+        android:layout_height="@dimen/fragment_users_avatar_size"
+        android:layout_marginTop="@dimen/fragment_users__list_items_margin_top"
+        tools:src="@android:drawable/sym_def_app_icon"
+        android:contentDescription="@string/fragment_users_list_image_description" />
+
     <TextView
-        android:id="@+id/tv_login"
+        android:id="@+id/text_view_login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp" />
+        android:layout_marginStart="@dimen/fragment_users_list_text_margin_start"
+        tools:text="@tools:sample/lorem" />
 
 </LinearLayout>

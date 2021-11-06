@@ -1,57 +1,54 @@
-package ru.s1aks.github_application.ui.users_fragment
+package ru.s1aks.github_application.ui.user_details_fragment
 
 import com.github.terrakok.cicerone.Router
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import ru.s1aks.github_application.domain.GithubRepo
-import ru.s1aks.github_application.domain.entities.GithubUser
-import ru.s1aks.github_application.ui.Screens
+import ru.s1aks.github_application.domain.entities.GithubUserRepo
 
-class UsersPresenter(
+class UserDetailsPresenter(
     private val repo: GithubRepo,
     private val router: Router,
-) : UsersContract.Presenter() {
+) : UserDetailsContract.Presenter() {
 
     private var compositeDisposable: CompositeDisposable = CompositeDisposable()
 
-    class UsersListPresenter : UserListPresenter {
-        val users = mutableListOf<GithubUser>()
-        override var itemClickListener: ((UserItemView) -> Unit)? = null
+    class UserDetailsListPresenter : DetailsListPresenter {
+        val userRepos = mutableListOf<GithubUserRepo>()
+        override var itemClickListener: ((DetailsItemView) -> Unit)? = null
 
-        override fun getCount() = users.size
+        override fun getCount() = userRepos.size
 
-        override fun bindView(view: UserItemView) {
+        override fun bindView(view: DetailsItemView) {
             view.position?.let {
-                view.setData(users[it])
+                view.setData(userRepos[it])
             }
 
         }
     }
 
-    val listPresenter = UsersListPresenter()
-
-    private var userList: List<GithubUser>? = null
+    val listPresenter = UserDetailsListPresenter()
+    var userLogin: String? = null
+    private var listRepos: List<GithubUserRepo>? = null
 
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
         viewState.initView()
-        loadData()
+        userLogin?.let { loadData(it) }
         listPresenter.itemClickListener = { itemView ->
-            itemView.position?.let { index ->
-                userList?.get(index)?.login?.let { router.navigateTo(Screens.userDetail(it)) }
-            }
+            itemView.position?.let { viewState.showToast(listRepos?.get(it)?.forks.toString()) }
         }
     }
 
-    override fun loadData() {
+    override fun loadData(userLogin: String) {
         compositeDisposable.add(
-            repo.getUsers()
+            repo.getUserRepoList(userLogin)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     {
-                        userList = it
-                        listPresenter.users.clear()
-                        listPresenter.users.addAll(it)
+                        listRepos = it
+                        listPresenter.userRepos.clear()
+                        listPresenter.userRepos.addAll(it)
                         viewState.updateList()
                     },
                     { thr ->
@@ -62,10 +59,8 @@ class UsersPresenter(
     }
 
     override fun dispose() {
-        userList = null
         compositeDisposable.dispose()
     }
-
 
     override fun backPressed(): Boolean {
         router.exit()
