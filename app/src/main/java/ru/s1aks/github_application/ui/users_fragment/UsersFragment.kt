@@ -7,18 +7,27 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import io.reactivex.disposables.CompositeDisposable
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
 import ru.s1aks.github_application.App
 import ru.s1aks.github_application.databinding.FragmentUsersBinding
+import ru.s1aks.github_application.impl.RoomGithubUsersCacheImpl
 import ru.s1aks.github_application.impl.WebGithubRepoImpl
 import ru.s1aks.github_application.ui.BackButtonListener
 
 class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonListener {
 
     private var binding: FragmentUsersBinding? = null
+    private var compositeDisposable: CompositeDisposable? = CompositeDisposable()
     private val presenter: UsersPresenter by moxyPresenter {
-        UsersPresenter(WebGithubRepoImpl(), App.instance.router)
+        UsersPresenter(
+            compositeDisposable,
+            RoomGithubUsersCacheImpl(
+                compositeDisposable,
+                WebGithubRepoImpl(),
+                App.instance.db.userDao),
+            App.instance.router)
     }
     private lateinit var adapter: UsersAdapter
 
@@ -35,7 +44,6 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
         binding?.recyclerView?.layoutManager = LinearLayoutManager(context)
         adapter = UsersAdapter(presenter.listPresenter)
         binding?.recyclerView?.adapter = adapter
-
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -53,7 +61,7 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
     }
 
     override fun onDestroy() {
-        presenter.dispose()
+        compositeDisposable = null
         super.onDestroy()
     }
 

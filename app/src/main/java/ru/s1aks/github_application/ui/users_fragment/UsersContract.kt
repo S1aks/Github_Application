@@ -15,7 +15,6 @@ class UsersContract {
 
     abstract class Presenter : MvpPresenter<View>() {
         abstract fun loadData()
-        abstract fun dispose()
         abstract fun backPressed(): Boolean
     }
 }

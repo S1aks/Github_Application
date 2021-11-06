@@ -3,16 +3,16 @@ package ru.s1aks.github_application.ui.users_fragment
 import com.github.terrakok.cicerone.Router
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import ru.s1aks.github_application.domain.GithubRepo
+import io.reactivex.schedulers.Schedulers
 import ru.s1aks.github_application.domain.entities.GithubUser
+import ru.s1aks.github_application.impl.RoomGithubUsersCacheImpl
 import ru.s1aks.github_application.ui.Screens
 
 class UsersPresenter(
-    private val repo: GithubRepo,
+    private val compositeDisposable: CompositeDisposable?,
+    private val repo: RoomGithubUsersCacheImpl,
     private val router: Router,
 ) : UsersContract.Presenter() {
-
-    private var compositeDisposable: CompositeDisposable = CompositeDisposable()
 
     class UsersListPresenter : UserListPresenter {
         val users = mutableListOf<GithubUser>()
@@ -44,14 +44,20 @@ class UsersPresenter(
     }
 
     override fun loadData() {
-        compositeDisposable.add(
-            repo.getUsers()
+        compositeDisposable?.add(
+            repo.usersCache
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    {
-                        userList = it
+                    { list ->
+                        userList = list.map {
+                            GithubUser(
+                                it.login,
+                                it.id,
+                                it.avatarUrl
+                            )
+                        }
                         listPresenter.users.clear()
-                        listPresenter.users.addAll(it)
+                        listPresenter.users.addAll(userList!!)
                         viewState.updateList()
                     },
                     { thr ->
@@ -59,13 +65,8 @@ class UsersPresenter(
                     }
                 )
         )
+        Thread { repo.getUsers() }.start()
     }
-
-    override fun dispose() {
-        userList = null
-        compositeDisposable.dispose()
-    }
-
 
     override fun backPressed(): Boolean {
         router.exit()
