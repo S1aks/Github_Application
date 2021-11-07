@@ -70,7 +70,6 @@ class UserDetailsFragment : MvpAppCompatFragment(), UserDetailsContract.View, Ba
         val params = forksSnackbar.view.layoutParams as FrameLayout.LayoutParams
         params.gravity = Gravity.TOP + Gravity.CENTER_HORIZONTAL
         params.width = ViewGroup.LayoutParams.WRAP_CONTENT
-        forksSnackbar.view.layoutParams = params
         forksSnackbar.show()
     }
 
