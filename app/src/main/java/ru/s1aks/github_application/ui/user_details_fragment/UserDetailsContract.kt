@@ -11,7 +11,7 @@ class UserDetailsContract {
     interface View : MvpView {
         fun initView()
         fun updateList()
-        fun showToast(message: String)
+        fun showForksNumber(number: Int)
         fun showError(message: String)
     }
 
