@@ -6,32 +6,38 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.github.terrakok.cicerone.Router
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.disposables.CompositeDisposable
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
-import ru.s1aks.github_application.App
 import ru.s1aks.github_application.databinding.FragmentUsersBinding
 import ru.s1aks.github_application.impl.RoomGithubUsersCacheImpl
-import ru.s1aks.github_application.impl.WebGithubRepoImpl
+import ru.s1aks.github_application.impl.util.app
 import ru.s1aks.github_application.ui.BackButtonListener
+import javax.inject.Inject
 
 class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonListener {
 
     private var binding: FragmentUsersBinding? = null
-    private var compositeDisposable: CompositeDisposable? = CompositeDisposable()
+    @Inject
+    lateinit var compositeDisposable: CompositeDisposable
+    @Inject
+    lateinit var router: Router
+    @Inject
+    lateinit var usersCacheImpl: RoomGithubUsersCacheImpl
     private val presenter: UsersPresenter by moxyPresenter {
         UsersPresenter(
             compositeDisposable,
-            RoomGithubUsersCacheImpl(
-                compositeDisposable,
-                WebGithubRepoImpl(),
-                App.instance.db.userDao),
-            App.instance.router)
+            usersCacheImpl,
+            router)
     }
     private lateinit var adapter: UsersAdapter
 
-
+    override fun onCreate(savedInstanceState: Bundle?) {
+        app.appComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
@@ -58,11 +64,6 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
     override fun onDestroyView() {
         binding = null
         super.onDestroyView()
-    }
-
-    override fun onDestroy() {
-        compositeDisposable = null
-        super.onDestroy()
     }
 
     override fun backPressed(): Boolean = presenter.backPressed()

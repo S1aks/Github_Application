@@ -36,7 +36,7 @@ class UserDetailsPresenter(
         viewState.initView()
         user?.let { loadData(it) }
         listPresenter.itemClickListener = { itemView ->
-            itemView.position?.let { viewState.showToast(listRepos?.get(it)?.forks.toString()) }
+            itemView.position?.let { viewState.showForksNumber(listRepos?.get(it)?.forks ?: 0) }
         }
     }
 

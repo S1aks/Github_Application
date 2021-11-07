@@ -3,7 +3,6 @@ package ru.s1aks.github_application.ui.users_fragment
 import com.github.terrakok.cicerone.Router
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import ru.s1aks.github_application.domain.entities.GithubUser
 import ru.s1aks.github_application.impl.RoomGithubUsersCacheImpl
 import ru.s1aks.github_application.ui.Screens
