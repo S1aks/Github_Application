@@ -6,31 +6,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.github.terrakok.cicerone.Router
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.disposables.CompositeDisposable
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
-import ru.s1aks.github_application.App
+import org.koin.android.ext.android.inject
 import ru.s1aks.github_application.databinding.FragmentUsersBinding
 import ru.s1aks.github_application.impl.RoomGithubUsersCacheImpl
-import ru.s1aks.github_application.impl.WebGithubRepoImpl
 import ru.s1aks.github_application.ui.BackButtonListener
 
 class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonListener {
 
     private var binding: FragmentUsersBinding? = null
-    private var compositeDisposable: CompositeDisposable? = CompositeDisposable()
+    private val router: Router by inject()
+    private val compositeDisposable: CompositeDisposable by inject()
+    private val roomUsersCacheImpl: RoomGithubUsersCacheImpl by inject()
     private val presenter: UsersPresenter by moxyPresenter {
-        UsersPresenter(
-            compositeDisposable,
-            RoomGithubUsersCacheImpl(
-                compositeDisposable,
-                WebGithubRepoImpl(),
-                App.instance.db.userDao),
-            App.instance.router)
+        UsersPresenter(compositeDisposable, roomUsersCacheImpl, router)
     }
-    private lateinit var adapter: UsersAdapter
-
+    private var adapter: UsersAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,7 +43,7 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
 
     @SuppressLint("NotifyDataSetChanged")
     override fun updateList() {
-        adapter.notifyDataSetChanged()
+        adapter?.notifyDataSetChanged()
     }
 
     override fun showError(message: String) {
@@ -57,12 +52,8 @@ class UsersFragment : MvpAppCompatFragment(), UsersContract.View, BackButtonList
 
     override fun onDestroyView() {
         binding = null
+        adapter = null
         super.onDestroyView()
-    }
-
-    override fun onDestroy() {
-        compositeDisposable = null
-        super.onDestroy()
     }
 
     override fun backPressed(): Boolean = presenter.backPressed()
